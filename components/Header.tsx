@@ -9,32 +9,39 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onOwnerClick, isOwner }) => {
   return (
-    <header className="flex items-center justify-between px-6 py-8 sm:px-12">
-      {/* Title */}
-      <div className="flex flex-col">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-widest text-white font-['Orbitron'] uppercase">
-          Nova Library
-        </h1>
-        <div className="h-1 w-32 bg-gradient-to-r from-[#0066ff] to-transparent mt-2 rounded-full" />
+    <header className="ps-header">
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <h1 className="ps-text-white ps-font-orbitron">Nova Library</h1>
+        <div className="ps-header-line" />
       </div>
 
-      {/* Simplified Quick Nav Icons */}
-      <div className="flex items-center space-x-4 sm:space-x-8 text-white/60">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', color: 'rgba(255,255,255,0.6)' }}>
         <button 
           onClick={onOwnerClick}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-full border transition-all duration-300 font-bold uppercase tracking-widest text-xs
-            ${isOwner 
-              ? 'border-[#0066ff] text-[#0066ff] bg-[#0066ff]/10' 
-              : 'border-white/10 hover:border-white/40 hover:text-white'
-            }`}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '9999px',
+            border: isOwner ? '1px solid var(--ps-blue)' : '1px solid rgba(255,255,255,0.1)',
+            backgroundColor: isOwner ? 'rgba(0,102,255,0.1)' : 'transparent',
+            color: isOwner ? 'var(--ps-blue)' : 'inherit',
+            fontWeight: 'bold',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            fontSize: '0.75rem',
+            cursor: 'pointer',
+            transition: 'all 0.3s'
+          }}
         >
           <ShieldCheck size={18} />
           <span>{isOwner ? 'Owner Mode' : 'Owner'}</span>
         </button>
-        <button className="hover:text-white transition-colors duration-200">
+        <button style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>
           <Search size={24} />
         </button>
-        <button className="hover:text-white transition-colors duration-200">
+        <button style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>
           <Settings size={24} />
         </button>
       </div>

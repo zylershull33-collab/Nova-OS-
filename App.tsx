@@ -7,7 +7,7 @@ import Header from './components/Header';
 import GameTile from './components/GameTile';
 import OwnerDashboard from './components/OwnerDashboard';
 import IntroScreen from './components/IntroScreen';
-import { ShieldAlert, X } from 'lucide-react';
+import { ShieldAlert, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const STORAGE_KEY = 'nova_ps5_library_data';
 
@@ -21,7 +21,6 @@ const App: React.FC = () => {
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Load games from localStorage or use defaults
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -35,23 +34,35 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Enable horizontal scrolling with the mouse wheel
   useEffect(() => {
     if (showIntro) return;
+
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      el.scrollBy({
+        left: e.deltaY * 1.5,
+        behavior: 'auto'
+      });
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [showIntro, localGames]);
+
+  const scroll = (direction: 'left' | 'right') => {
     const el = scrollContainerRef.current;
     if (el) {
-      const onWheel = (e: WheelEvent) => {
-        if (e.deltaY === 0) return;
-        e.preventDefault();
-        el.scrollTo({
-          left: el.scrollLeft + e.deltaY * 2.5,
-          behavior: 'auto'
-        });
-      };
-      el.addEventListener('wheel', onWheel, { passive: false });
-      return () => el.removeEventListener('wheel', onWheel);
+      const scrollAmount = window.innerWidth * 0.4;
+      el.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
     }
-  }, [localGames, showIntro]);
+  };
 
   const saveGames = (newGames: Game[]) => {
     setLocalGames(newGames);
@@ -60,7 +71,7 @@ const App: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
     const user = formData.get('username');
     const pass = formData.get('password');
     if (user === 'nova' && pass === 'stacie2378') {
@@ -77,7 +88,7 @@ const App: React.FC = () => {
   }, [selectedGame]);
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col bg-black overflow-hidden font-['Rajdhani']">
+    <div className="ps-app">
       <AnimatePresence mode="wait">
         {showIntro ? (
           <IntroScreen key="intro" onComplete={() => setShowIntro(false)} />
@@ -87,10 +98,10 @@ const App: React.FC = () => {
             initial={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
             animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
             transition={{ duration: 1.2, ease: "easeOut" }}
-            className="relative flex flex-col h-screen max-h-screen w-full"
+            className="flex flex-col h-screen max-h-screen w-full relative"
           >
             {/* Global Background Layer */}
-            <div className="fixed inset-0 z-0 pointer-events-none">
+            <div className="ps-bg-layer">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentBackground}
@@ -100,14 +111,11 @@ const App: React.FC = () => {
                   transition={{ duration: 1.2, ease: "easeInOut" }}
                   className="absolute inset-0"
                 >
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center scale-105 transition-transform duration-[3s]"
-                    style={{ backgroundImage: `url(${currentBackground})` }}
-                  />
+                  <div className="ps-bg-image" style={{ backgroundImage: `url(${currentBackground})` }} />
                 </motion.div>
               </AnimatePresence>
-              <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/10 to-black/90" />
-              <div className="absolute inset-0 bg-radial-at-t from-transparent to-black" />
+              <div className="ps-bg-overlay" />
+              <div className="ps-radial-overlay" />
             </div>
 
             {/* UI Layer */}
@@ -117,8 +125,8 @@ const App: React.FC = () => {
                 onOwnerClick={() => isOwner ? setShowDashboard(true) : setShowLogin(true)} 
               />
 
-              <main className="flex-grow flex flex-col justify-center pb-12">
-                <div className="mb-8 h-48 sm:h-64 flex flex-col justify-end px-6 sm:px-12 overflow-visible">
+              <main style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden', paddingBottom: '3rem' }}>
+                <div style={{ marginBottom: '2rem', height: '16rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 3rem' }}>
                   <AnimatePresence mode="wait">
                     {selectedGame && (
                       <motion.div
@@ -127,12 +135,11 @@ const App: React.FC = () => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 30 }}
                         transition={{ duration: 0.4, ease: "easeOut" }}
-                        className="overflow-visible"
                       >
-                        <p className="text-[#0066ff] text-lg font-bold tracking-[0.4em] uppercase font-['Orbitron'] mb-3 drop-shadow-[0_0_10px_rgba(0,102,255,0.5)]">
+                        <p className="ps-text-blue ps-font-bold ps-uppercase" style={{ fontSize: '1.125rem', letterSpacing: '0.4em', marginBottom: '0.75rem', textShadow: '0 0 10px rgba(0,102,255,0.5)' }}>
                           Exploring
                         </p>
-                        <h2 className="text-5xl sm:text-9xl font-bold text-white drop-shadow-2xl uppercase tracking-tighter leading-[0.9] sm:leading-none">
+                        <h2 className="ps-text-white ps-font-bold ps-uppercase" style={{ fontSize: 'clamp(3rem, 10vw, 8rem)', letterSpacing: '-0.05em', lineHeight: 1, margin: 0 }}>
                           {selectedGame.name}
                         </h2>
                       </motion.div>
@@ -140,14 +147,19 @@ const App: React.FC = () => {
                   </AnimatePresence>
                 </div>
 
-                <div className="relative w-full overflow-visible">
-                  <div 
-                    ref={scrollContainerRef}
-                    className="flex overflow-x-auto no-scrollbar snap-x snap-mandatory py-16 px-12 gap-20 sm:gap-24 scroll-smooth"
+                <div className="ps-scroller-container">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    onClick={() => scroll('left')}
+                    style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', zIndex: 30, padding: '1rem', borderRadius: '9999px', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', cursor: 'pointer' }}
                   >
-                    <div className="flex-shrink-0 w-2 sm:w-8" />
+                    <ChevronLeft size={32} />
+                  </motion.button>
+
+                  <div ref={scrollContainerRef} className="ps-scroller">
+                    <div style={{ flexShrink: 0, width: '2rem' }} />
                     {localGames.map((game) => (
-                      <div key={game.id} className="snap-center">
+                      <div key={game.id} className="ps-snap-center">
                         <GameTile
                           game={game}
                           isSelected={selectedGame?.id === game.id}
@@ -155,26 +167,34 @@ const App: React.FC = () => {
                         />
                       </div>
                     ))}
-                    <div className="flex-shrink-0 w-32 sm:w-64" />
+                    <div style={{ flexShrink: 0, width: '16rem' }} />
                   </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    onClick={() => scroll('right')}
+                    style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', zIndex: 30, padding: '1rem', borderRadius: '9999px', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', cursor: 'pointer' }}
+                  >
+                    <ChevronRight size={32} />
+                  </motion.button>
                 </div>
               </main>
 
-              <footer className="px-6 sm:px-12 pb-10 text-white/40 flex items-center space-x-12 uppercase tracking-[0.25em] text-[10px] sm:text-xs font-bold">
-                <div className="flex items-center space-x-4 group cursor-help hover:text-white transition-all duration-300">
-                  <span className="w-8 h-8 flex items-center justify-center rounded-full border-2 border-white/20 group-hover:border-[#0066ff] group-hover:text-[#0066ff] transition-colors shadow-sm font-['Orbitron']">X</span>
-                  <span>Launch Game</span>
+              <footer style={{ padding: '0 3rem 2.5rem', display: 'flex', alignItems: 'center', gap: '3rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.25em', fontSize: '0.75rem', fontWeight: 700 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ width: '2rem', height: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.2)', fontFamily: 'Orbitron' }}>X</span>
+                  <span>Launch</span>
                 </div>
-                <div className="flex items-center space-x-4 group cursor-help hover:text-white transition-all duration-300">
-                  <span className="w-8 h-8 flex items-center justify-center rounded-full border-2 border-white/20 group-hover:border-white transition-colors shadow-sm font-['Orbitron']">O</span>
-                  <span>Return</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ width: '2rem', height: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.2)', fontFamily: 'Orbitron' }}>O</span>
+                  <span>Back</span>
                 </div>
-                <div className="ml-auto flex items-center space-x-4 text-[#0066ff]">
-                  <div className="relative flex items-center justify-center">
-                    <div className="absolute w-4 h-4 rounded-full bg-[#0066ff] animate-ping opacity-25" />
-                    <div className="relative w-2.5 h-2.5 rounded-full bg-[#0066ff] shadow-[0_0_10px_#0066ff]" />
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--ps-blue)' }}>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="animate-ps-ping" style={{ position: 'absolute', width: '1rem', height: '1rem', borderRadius: '50%', backgroundColor: 'var(--ps-blue)' }} />
+                    <div style={{ position: 'relative', width: '0.625rem', height: '0.625rem', borderRadius: '50%', backgroundColor: 'var(--ps-blue)', boxShadow: '0 0 10px var(--ps-blue)' }} />
                   </div>
-                  <span className="tracking-[0.3em] font-['Orbitron']">Nova Network Online</span>
+                  <span className="ps-font-orbitron">Network Online</span>
                 </div>
               </footer>
             </div>
@@ -184,47 +204,25 @@ const App: React.FC = () => {
 
       {/* Login Modal */}
       {showLogin && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-sm bg-[#111] border border-white/10 p-8 rounded-2xl shadow-2xl relative"
-          >
-            <button onClick={() => setShowLogin(false)} className="absolute top-4 right-4 text-white/20 hover:text-white"><X size={20} /></button>
-            <div className="flex flex-col items-center mb-6">
-              <div className="w-16 h-16 bg-[#0066ff]/10 rounded-full flex items-center justify-center mb-4 text-[#0066ff]">
+        <div className="ps-modal-overlay">
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="ps-card">
+            <button onClick={() => setShowLogin(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', cursor: 'pointer' }}><X size={20} /></button>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ width: '4rem', height: '4rem', background: 'rgba(0,102,255,0.1)', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', color: 'var(--ps-blue)' }}>
                 <ShieldAlert size={32} />
               </div>
-              <h3 className="text-xl font-bold font-['Orbitron'] text-white uppercase tracking-widest">Security Access</h3>
-              <p className="text-white/40 text-[10px] mt-1 tracking-widest uppercase">Enter Credentials to access Owner role</p>
+              <h3 className="ps-font-orbitron ps-uppercase" style={{ fontSize: '1.25rem', margin: 0, letterSpacing: '0.1em' }}>Access</h3>
             </div>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] text-white/40 uppercase font-bold ml-1">Username</label>
-                <input 
-                  type="text" 
-                  name="username"
-                  required
-                  placeholder="e.g. nova"
-                  className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-[#0066ff] outline-none transition-colors"
-                />
+            <form onSubmit={handleLogin}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontWeight: 700 }}>Username</label>
+                <input type="text" name="username" required className="ps-input" placeholder="nova" />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-white/40 uppercase font-bold ml-1">Password</label>
-                <input 
-                  type="password" 
-                  name="password"
-                  required
-                  placeholder="••••••••"
-                  className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-[#0066ff] outline-none transition-colors"
-                />
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontWeight: 700 }}>Password</label>
+                <input type="password" name="password" required className="ps-input" placeholder="••••••••" />
               </div>
-              <button 
-                type="submit"
-                className="w-full bg-[#0066ff] text-white py-3 rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-[#0052cc] transition-all shadow-[0_0_20px_rgba(0,102,255,0.3)] mt-2"
-              >
-                Verify Identity
-              </button>
+              <button type="submit" className="ps-btn">Verify</button>
             </form>
           </motion.div>
         </div>
@@ -239,19 +237,6 @@ const App: React.FC = () => {
           onLogout={() => { setIsOwner(false); setShowDashboard(false); }}
         />
       )}
-
-      <style>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .bg-radial-at-t {
-          background: radial-gradient(circle at top, var(--tw-gradient-from), var(--tw-gradient-to));
-        }
-      `}</style>
     </div>
   );
 };
