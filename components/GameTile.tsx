@@ -2,8 +2,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { GameTileProps } from '../types';
+import * as LucideIcons from 'lucide-react';
 
 const GameTile: React.FC<GameTileProps> = ({ game, isSelected, onHover }) => {
+  // Map systemIcon string to the actual component
+  const IconComponent = game.systemIcon ? (LucideIcons as any)[game.systemIcon] : null;
+
   return (
     <motion.div
       className={`ps-tile ${isSelected ? 'selected' : ''}`}
@@ -15,8 +19,21 @@ const GameTile: React.FC<GameTileProps> = ({ game, isSelected, onHover }) => {
       whileHover={{ scale: 1.1, translateY: -10 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
-      {/* Game Icon/Cover */}
-      <img src={game.icon} alt={game.name} />
+      {/* Dynamic Content: System Icon or Image */}
+      {game.systemIcon && IconComponent ? (
+        <div className="ps-tile-icon-bg">
+          <IconComponent 
+            size={80} 
+            strokeWidth={1.5} 
+            style={{ 
+              filter: isSelected ? 'drop-shadow(0 0 15px var(--ps-blue-glow))' : 'none',
+              transition: 'all 0.3s ease'
+            }} 
+          />
+        </div>
+      ) : (
+        <img src={game.icon} alt={game.name} />
+      )}
 
       {/* Shine Effect Overlay */}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent)', opacity: isSelected ? 1 : 0, transition: 'opacity 0.5s' }} />

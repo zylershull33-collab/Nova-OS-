@@ -5,6 +5,7 @@ export interface Game {
   icon: string;
   link: string;
   background?: string; // Optional custom background for the "Selected" state
+  systemIcon?: string; // Name of the Lucide icon to use instead of an image URL
 }
 
 export interface GameTileProps {
