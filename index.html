@@ -5,20 +5,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nova PS5 Library</title>
-    <!-- Removed Tailwind Play CDN to fix Vercel production warnings -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+      /* PS5 Dashboard Design System */
+      :root {
+        --ps-blue: #0066ff;
+        --ps-blue-glow: rgba(0, 102, 255, 0.6);
+        --ps-dark-gray: #0a0a0a;
+        --ps-black: #000000;
+      }
+
       body {
         margin: 0;
         padding: 0;
-        background-color: #000;
+        background-color: var(--ps-black);
         color: #fff;
         overflow-x: hidden;
         font-family: 'Rajdhani', sans-serif;
       }
-      /* Custom scrollbar to match the PS5 aesthetic */
+
       ::-webkit-scrollbar {
         height: 6px;
         width: 6px;
@@ -33,20 +40,243 @@
       ::-webkit-scrollbar-thumb:hover {
         background: rgba(0, 102, 255, 0.6);
       }
+
+      .ps-app {
+        position: relative;
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .ps-bg-layer {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      .ps-bg-image {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        transform: scale(1.05);
+      }
+
+      .ps-bg-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.1), rgba(0,0,0,0.9));
+      }
+
+      .ps-radial-overlay {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top, transparent, var(--ps-black));
+      }
+
+      .ps-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 2rem 3rem;
+        z-index: 10;
+      }
+
+      .ps-header h1 {
+        font-family: 'Orbitron', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .ps-header-line {
+        height: 4px;
+        width: 120px;
+        background: linear-gradient(to right, var(--ps-blue), transparent);
+        margin-top: 0.5rem;
+        border-radius: 2px;
+      }
+
+      .ps-scroller-container {
+        position: relative;
+        width: 100%;
+        overflow: visible;
+      }
+
+      .ps-scroller {
+        display: flex;
+        overflow-x: auto;
+        gap: 6rem;
+        padding: 4rem 3rem;
+        scroll-snap-type: x proximity;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      .ps-scroller::-webkit-scrollbar {
+        display: none;
+      }
+
+      .ps-snap-center {
+        scroll-snap-align: center;
+      }
+
+      .ps-tile {
+        position: relative;
+        flex-shrink: 0;
+        width: 220px;
+        height: 280px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 2px solid rgba(255,255,255,0.1);
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .ps-tile.selected {
+        border-color: var(--ps-blue);
+        box-shadow: 0 0 30px var(--ps-blue-glow);
+        z-index: 2;
+      }
+
+      .ps-tile img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.7s ease;
+      }
+
+      .ps-tile:hover img {
+        transform: scale(1.1);
+      }
+
+      .ps-tile-icon-bg {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #121212 0%, #000 100%);
+        color: var(--ps-blue);
+        transition: all 0.3s ease;
+      }
+
+      .ps-tile.selected .ps-tile-icon-bg {
+        background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
+      }
+
+      .ps-tile-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        padding: 1rem;
+        display: flex;
+        align-items: flex-end;
+      }
+
+      .ps-text-blue { color: var(--ps-blue); }
+      .ps-text-white { color: #fff; }
+      .ps-font-orbitron { font-family: 'Orbitron', sans-serif; }
+      .ps-uppercase { text-transform: uppercase; }
+      .ps-tracking-widest { letter-spacing: 0.25em; }
+      .ps-font-bold { font-weight: 700; }
+
+      .ps-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(10px);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+
+      .ps-card {
+        background: #111;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 1rem;
+        padding: 2rem;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        position: relative;
+      }
+
+      .ps-input {
+        width: 100%;
+        background: #000;
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 0.75rem 1rem;
+        color: #fff;
+        border-radius: 0.5rem;
+        margin-top: 0.5rem;
+        box-sizing: border-box;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .ps-input:focus {
+        border-color: var(--ps-blue);
+      }
+
+      .ps-btn {
+        width: 100%;
+        background: var(--ps-blue);
+        color: #fff;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .ps-btn:hover {
+        background: #0052cc;
+      }
+
+      @keyframes ps-pulse {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 1; }
+      }
+
+      .animate-ps-pulse {
+        animation: ps-pulse 2s infinite ease-in-out;
+      }
+
+      @keyframes ps-ping {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(2.5); opacity: 0; }
+      }
+
+      .animate-ps-ping {
+        animation: ps-ping 1.5s infinite ease-in-out;
+      }
     </style>
     <script type="importmap">
-    {
-      "imports": {
-        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-        "react": "https://esm.sh/react@^19.2.3",
-        "react/": "https://esm.sh/react@^19.2.3/",
-        "framer-motion": "https://esm.sh/framer-motion@^12.26.2",
-        "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
-      }
-    }
-    </script>
-    <!-- Explicitly import the main script for production compatibility -->
-    <script type="module" src="./index.tsx"></script>
+{
+  "imports": {
+    "react-dom": "https://esm.sh/react-dom@^19.2.3",
+    "react-dom/client": "https://esm.sh/react-dom@^19.2.3/client",
+    "react": "https://esm.sh/react@^19.2.3",
+    "framer-motion": "https://esm.sh/framer-motion@^12.26.2",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+  }
+}
+</script>
   </head>
   <body>
     <div id="root"></div>
